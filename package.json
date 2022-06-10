@@ -1,0 +1,34 @@
+{
+  "name": "blockchain-2021",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "scripts": {
+    "test": "jest --watchAll",
+    "start": "node index.js",
+    "serve": "DEBUG=true nodemon index.js --ignore ./helpers/data.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "express": "^4.17.1",
+    "hex-to-binary": "^1.0.1",
+    "lowdb": "^1.0.0",
+    "morgan": "^1.10.0",
+    "node-rsa": "^1.1.1",
+    "require": "^2.4.20",
+    "sha3": "^2.1.4",
+    "uuid": "^8.3.2",
+    "ws": "^7.4.3"
+  },
+  "devDependencies": {
+    "jest": "^28.1.1",
+    "nodemon": "^2.0.16"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "miners": [
+    {
+      "apiKey": "be3234e0-e828-11ec-966c-09196d83a34b",
+      "address": "6a7c1f77ffe4596322cc8241e7533f02a236271dba5ee147e210360d8e053bc4",
+      "passKey": "123456"
+    }
+  ]
+}
