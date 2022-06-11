@@ -8,6 +8,11 @@ module.exports = function(app, wallet, blockchain, transactionPool, p2pInstance)
     res.json(response)
   })
 
+  app.get('/pool', function(req, res) {
+    let response = apiResponse({ status: 1, data: transactionPool.pool });
+    res.json(response)
+  })
+
   // TODO: move transaction scanner routes to trnxscanner api
 
   app.get('/value', function(req, res) {
@@ -51,28 +56,33 @@ module.exports = function(app, wallet, blockchain, transactionPool, p2pInstance)
     const { sender, recipient, amount, type } = req.body;
     let response = apiResponse({ status: 0 })
     // TODO: add api keys
+    // TODO: validate address before send
     if((amount && recipient) && sender != '') {
-      let transaction = transactionPool.existTransaction({ sender, recipient });
       let senderWallet = wallet.accounts.find(account => account.address == sender)
-      let gas = amount * 0.01
-      try {
-        // proceed
-        let newTransaction = transaction ? 
-          transactionPool.updateTransaction(senderWallet, transaction, recipient, amount, gas) :
-          wallet.createTransaction({ chain: blockchain.chain, sender, recipient, amount, gas });
-        // TODO: auto miner
-        if(newTransaction) {
-          transactionPool.addToPool(newTransaction)
-          p2pInstance.broadcastTransaction(transaction)
-          response.status = 1
-          response.data = newTransaction
-          response.message = 'New Transaction Created'
-        } else response.message = 'An Error Occurred'
-      } catch (error) {
-        console.trace(error)
-        let response = apiResponse({ status: 1, message: error.message })
-        return res.json(response)
-      }
+      if(senderWallet) {
+        if(wallet.accounts.find(account => account.address == recipient)) {
+          let transaction = transactionPool.existTransaction({ sender, recipient });
+          let gas = amount * 0.01
+          try {
+            // proceed
+            let newTransaction = transaction ? 
+              transactionPool.updateTransaction(senderWallet, transaction, recipient, amount, gas) :
+              wallet.createTransaction({ chain: blockchain.chain, sender, recipient, amount, gas });
+            // TODO: auto miner
+            if(newTransaction) {
+              transactionPool.addToPool(newTransaction)
+              p2pInstance.broadcastTransaction(transaction)
+              response.status = 1
+              response.data = newTransaction
+              response.message = 'New Transaction Created'
+            } else response.message = 'An Error Occurred'
+          } catch (error) {
+            console.trace(error)
+            let response = apiResponse({ status: 1, message: error.message })
+            return res.json(response)
+          }
+        } else response.message = 'Recipient address not found'
+      } else response.message = 'Invalid sender address'
     } else response.message = 'Incompleted request'
     res.json(response)
   })

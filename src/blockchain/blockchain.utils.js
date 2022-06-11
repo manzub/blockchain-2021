@@ -1,4 +1,6 @@
-const crypto = require("crypto")
+const crypto = require("crypto");
+const { readdirSync, readFileSync, writeFileSync, unlinkSync } = require("fs");
+const { chainDataPath } = require("../../helpers");
 
 const GENESIS_DATA = {
   timestamp: 1654847852939,
@@ -15,8 +17,55 @@ function cryptoHash(...inputs) {
   return hash.digest('hex')
 }
 
+function addToChain({ transactionPool, blockchain, p2pInstance }) {
+  // priodic add to blockchain
+  if(p2pInstance.nextBlock) {
+    if(Object.values(transactionPool.pool).length >= 2) {
+      const pendingTransactions = transactionPool.pendingTransactions();
+      const completedTransactions = pendingTransactions.map(function(transaction) {
+        return {...transaction, status: 'complete'}
+      });
+
+      blockchain.addBlock({ block: p2pInstance.nextBlock, data: completedTransactions })
+      p2pInstance.broadcastChain();
+      pendingTransactions.forEach(x => transactionPool.removeTransaction(x))
+      console.log('Next block added to chain');
+      p2pInstance.removeNextBlock()
+    } else {
+      console.log('Next block ready, awaiting new trasnactions');
+    }
+  } else if(!p2pInstance.nextBlock && Object.values(transactionPool.pool).length >= 2) {
+    console.log('Pending Transactions, Awaiting Miners');
+  } else {
+    console.log('Worker Ready');
+  }
+}
+
+function loadSavedChain() {
+  const dir = `${chainDataPath}/blocks`
+  const blocks = readdirSync(dir).map(function(data) {
+    return JSON.parse(readFileSync(`${dir}/${data}`))
+  })
+  return blocks;
+}
+
+function replaceSavedChain(chain) {
+  const dir = `${chainDataPath}/blocks`
+  readdirSync(dir).forEach(data => unlinkSync(`${dir}/${data}`))
+  chain.forEach(data => saveBlockLocal(data))
+}
+
+function saveBlockLocal(block) {
+  const serializedBlock = JSON.stringify(block);
+  writeFileSync(`${chainDataPath}/blocks/block_${block.timestamp}.dat`, serializedBlock, { flag: 'w' })
+}
+
 module.exports = {
   GENESIS_DATA,
   cryptoHash,
+  addToChain,
+  loadSavedChain,
+  replaceSavedChain,
+  saveBlockLocal,
   MINE_RATE: 1000
 }

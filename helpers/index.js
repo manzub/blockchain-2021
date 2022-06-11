@@ -16,5 +16,6 @@ module.exports = {
   existingMiner({ address, passKey }) {
     const item = database.get('miners').find({ address, passKey }).value();
     return item;
-  }
+  },
+  chainDataPath: `${path.resolve(__dirname, '..')}/chaindata`
 }

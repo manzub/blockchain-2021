@@ -1,21 +1,25 @@
-const crypto = require("crypto")
-
-function signTransaction({ senderWallet, data }) {
-  return crypto.sign('sha256', Buffer.from(JSON.stringify(data)), {
-    key: senderWallet.privateKey,
-    padding: crypto.constants.RSA_PKCS1_PSS_PADDING
-  }).toString('hex');
-}
-
-function verifySignature({ address, data, signature }) {
-  const { publicKey } = fetchKeyPair({ address })
-  return crypto.verify('sha256', Buffer.from(JSON.stringify(data)), {
-      key:publicKey,
-      padding:crypto.constants.RSA_PKCS1_PSS_PADDING
-  }, Buffer.from(signature, 'hex'))
-}
+const { readdirSync, readFileSync, writeFileSync, unlinkSync } = require("fs")
+const { chainDataPath } = require("../../helpers")
 
 module.exports = {
-  signTransaction,
-  verifySignature
+  loadSavedTrnxPool() {
+    let trnxPool = readdirSync(`${chainDataPath}/trnx_pool`).reduce(function(map, data) {
+      const parsedTransaction = JSON.parse(readFileSync(`${chainDataPath}/trnx_pool/${data}`))
+      map[parsedTransaction.id] = parsedTransaction
+      return map;
+    }, {})
+
+    return trnxPool;
+  },
+  saveTransactionToLocal(transaction) {
+    const serializedTrnx = JSON.stringify(transaction);
+    writeFileSync(`${chainDataPath}/trnx_pool/${transaction.id}.dat`, serializedTrnx, { flag: 'w' })
+  },
+  updateLocalTrnx(transaction, option) {
+    let path = `${chainDataPath}/trnx_pool/${transaction.id}.dat`
+    if(readFileSync(path)) {
+      unlinkSync(path)
+      (option && option != 'delete') && writeFileSync(path, JSON.stringify(transaction), { flag: 'w' })
+    }
+  }
 }

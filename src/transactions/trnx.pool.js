@@ -1,25 +1,27 @@
 const Transaction = require("./transaction")
+const transactionUtils = require("./transaction.utils")
 
 class TransactionPool {
   constructor() {
-    this.pool = {}
-    // TODO: load saved trnx-pool
+    // TODO: test load saved trnx-pool
+    this.pool = {...transactionUtils.loadSavedTrnxPool()}
   }
 
   addToPool(transaction) {
     this.pool[transaction.id] = transaction
-    // save local
+    // TODO: test save local
+    transactionUtils.saveTransactionToLocal(transaction)
   }
 
   completeTransaction(transaction) {
     this.removeTransaction(transaction)
     transaction.status = 'complete'
     this.addToPool(transaction)
-    //TODO: update local transaction
+    //TODO: test update local transaction
+    transactionUtils.updateLocalTrnx(transaction, 'repl')
   }
 
   updateTransaction(senderWallet, transaction, recipient, amount, gas) {
-    // TODO: update local
     let sender = transaction.input.address;
     if((amount+gas) > transaction.outputMap[sender]) {
       throw new Error('Amount exceeds balance')
@@ -38,7 +40,8 @@ class TransactionPool {
   }
 
   removeTransaction(transaction) {
-    // TODO: remove local
+    // TODO: test remove local
+    transactionUtils.updateLocalTrnx(transaction, 'delete')
     let newMap = Object.values(this.pool).filter(x => x.id != transaction.id)
     this.setPool({})
     newMap.forEach(trnx => this.addToPool(trnx))

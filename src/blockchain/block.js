@@ -21,7 +21,7 @@ class Block {
   static completeBlock({ block, data}) {
     if((block && data) && typeof data == 'object') {
       let nextBlock = {...block};
-      nextBlock.data = [data, ...nextBlock.data];
+      nextBlock.data = [...data, ...nextBlock.data];
       let { timestamp, lastHash, nonce, difficulty } = nextBlock
       nextBlock.hash = cryptoHash(timestamp, lastHash, nextBlock.data, nonce, difficulty);
       return new this({ timestamp, lastHash, hash: nextBlock.hash, data: nextBlock.data, nonce, difficulty });

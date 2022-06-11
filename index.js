@@ -6,7 +6,9 @@ const { getNetworkAddress } = require("./helpers/network");
 const Blockchain = require('./src/blockchain/blockchain');
 const TransactionPool = require('./src/transactions/trnx.pool');
 const Wallet = require('./src/wallet/wallet');
-const P2PServer = require('./network/peers');
+const P2PServer = require('./servers/peers');
+const cron = require("node-cron");
+const { addToChain } = require("./src/blockchain/blockchain.utils");
 
 // initialize imports
 const app = express();
@@ -26,8 +28,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-require('./network/index')(app, wallet, blockchain, transactionPool, p2pInstance)
-require('./network/miner.routes')(app, blockchain, transactionPool, p2pInstance, wallet)
+require('./servers/index')(app, wallet, blockchain, transactionPool, p2pInstance)
+require('./servers/miner.routes')(app, blockchain, transactionPool, p2pInstance, wallet)
 
 // default page not found route
 app.use("*", (req, res) => {
@@ -52,10 +54,5 @@ app.listen(HTTP_PORT, () => {
     `\thttp://localhost:${HTTP_PORT}`
   );
 })
-// priodic add to blockchain
-setInterval(() => {
-  if(p2pInstance.nextBlock) {
-    const pendingTransactions = transactionPool.pendingTransactions();
-    
-  }
-}, 5000);
+// schedule cron
+cron.schedule('*/5 * * * * *', () => addToChain({ transactionPool, blockchain, p2pInstance }))

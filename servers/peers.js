@@ -26,6 +26,10 @@ class P2PServer {
     this.nextBlock = null
   }
 
+  removeNextBlock() {
+    this.nextBlock = null
+  }
+
   listen() {
     const server = new WebSocket.Server({ port: P2P_PORT })
     server.on('connection', socket => this.connectSocket(socket))
@@ -75,8 +79,8 @@ class P2PServer {
           if(!this.nextBlock) {
             socket.send(JSON.stringify({ type:CHANNELS.MINER, result: `Mining Block`}))
             let result = this.mineBlock(miner, address, times)
-            this.nextBlock = result;
-            socket.send(JSON.stringify({ type: CHANNELS.MINER, result }))
+            this.nextBlock = result.block;
+            socket.send(JSON.stringify({ type: CHANNELS.MINER, result: result.message }))
           }else {
             setTimeout(() => {
               socket.send(JSON.stringify({ type: CHANNELS.MINER, result: 'Waiting for empty new block'}));
@@ -92,15 +96,14 @@ class P2PServer {
     prevTimestamp = this.blockchain.chain[this.blockchain.chain.length - 1].timestamp;
 
     let minerWallet = this.wallet.accounts.find(x => x.address == address)
-    // let minedBlock = miner.mineNewBlock({ minerWallet: minerWallet.address, reward: 0.001, lastBlock: this.blockchain.chain[this.blockchain.chain.length - 1], })
-    let minedBlock = miner.mineNewBlock({ minerWallet: address, reward: 0.001, lastBlock: this.blockchain.chain[this.blockchain.chain.length - 1], })
+    let minedBlock = miner.mineNewBlock({ minerWallet: address, reward: 0.001, lastBlock: this.blockchain.chain[this.blockchain.chain.length - 1] })
+    // let minedBlock = miner.mineNewBlock({ minerWallet: address, reward: 0.001, lastBlock: this.blockchain.chain[this.blockchain.chain.length - 1], })
 
     if(minedBlock) {
-      // this.blockchain.addBlock({ block: minedBlock })
       timeDiff = minedBlock.timestamp - prevTimestamp
       times.push(timeDiff)
       average = times.reduce((total, num) => total+num)
-      return `Time to mine block: ${timeDiff}ms, Difficulty: ${minedBlock.difficulty}, Avg Tiem: ${average}`
+      return { block: minedBlock, message: `Time to mine block: ${timeDiff}ms, Difficulty: ${minedBlock.difficulty}, Avg Tiem: ${average}` }
     }
   }
 

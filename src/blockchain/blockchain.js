@@ -1,17 +1,19 @@
 const Transaction = require("../transactions/transaction");
 const Block = require("./block");
-const { cryptoHash } = require("./blockchain.utils");
+const blockchainUtils = require("./blockchain.utils");
 
 class Blockchain {
   constructor() {
-    this.chain = [Block.genesis()];
-    // TODO: load saved chain
+    // TODO: test load saved chain
+    this.chain = [Block.genesis(), ...blockchainUtils.loadSavedChain()];
   }
 
   addBlock({block, data}) {
     const nb = Block.completeBlock({ block, data })
     this.chain.push(nb);
-    // TODO: save new block
+    // TODO: test save new block
+    blockchainUtils.saveBlockLocal(nb)
+
   }
 
   replaceChain(chain, onSuccess, validTransactions = true) {
@@ -23,7 +25,8 @@ class Blockchain {
       console.log('replacing existing chain')
       this.chain = chain
       onSuccess && onSuccess();
-      // TODO: replace local chain
+      // TODO: test replace local chain
+      blockchainUtils.replaceSavedChain(chain)
     } else return console.error('invalid chain')
   }
 
@@ -74,7 +77,7 @@ class Blockchain {
       const lastDifficulty = chain[index-1]
 
       if(block.lastHash !== actualLastHash) return false
-      const validatedHash = cryptoHash(...block);
+      const validatedHash = blockchainUtils.cryptoHash(timestamp, lastHash, data, nonce, difficulty);
       if(block.hash !== validatedHash) return false
       if(Math.abs(lastDifficulty - difficulty) > 1) return false
     }

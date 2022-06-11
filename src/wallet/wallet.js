@@ -1,13 +1,13 @@
 const { generateKeyPairSync } = require('crypto');
-const Transaction = require('../transactions/transaction')
-const { newWalletAddress } = require('./wallet.utils');
+const Transaction = require('../transactions/transaction');
+const walletUtils = require('./wallet.utils');
+const { newWalletAddress, STARTING_BALANCE } = require('./wallet.utils');
 
 class Wallet {
   constructor() {
-    this.accounts = []
-    // TODO: load saved acconts
+    this.accounts = [...walletUtils.loadSavedWallets()]
+    // TODO: test load saved acconts
     // TODO: primary wallet
-    // TODO: validate address before send
   }
 
   createAccount() {
@@ -17,9 +17,10 @@ class Wallet {
       publicKeyEncoding: { type: 'pkcs1', format: 'pem' },
       privateKeyEncoding: { type: 'pkcs1', format: 'pem' }
     });
-    // TODO: save local
+    // TODO: test save local
+    walletUtils.saveWalletPrivateKey({ address, privateKey })
     this.accounts.push({ address, publicKey, privateKey, balance: 0 });
-    return {address, balance: 0.00};
+    return {address, balance: STARTING_BALANCE};
   }
 
   createTransaction({ chain, sender, recipient, amount, gas }) {
@@ -49,7 +50,8 @@ class Wallet {
         let outputMap = Object.keys(transaction.outputMap);
         if(outputMap.indexOf(address) == 0) {
           if(transaction.status == 'complete') addressOutput = transaction.outputMap[address]
-        } else addressOutput = transaction.outputMap[address];
+        } else 
+        addressOutput = transaction.outputMap[address];
 
         if(addressOutput) {
           outputsTotal += addressOutput
@@ -58,7 +60,7 @@ class Wallet {
       if(hasConductedTransaction) break
     }
 
-    return outputsTotal;
+    return hasConductedTransaction ? outputsTotal : walletUtils.STARTING_BALANCE;
   }
 
   calculateMinerRewards({ chain, address }) {
