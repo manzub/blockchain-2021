@@ -55,4 +55,8 @@ app.listen(HTTP_PORT, () => {
   );
 })
 // schedule cron
-cron.schedule('*/5 * * * * *', () => addToChain({ transactionPool, blockchain, p2pInstance }))
+let count = 0;
+cron.schedule('*/5 * * * * *', () => {
+  count++
+  addToChain({ transactionPool, blockchain, p2pInstance }, count)
+})

@@ -3,13 +3,11 @@ const transactionUtils = require("./transaction.utils")
 
 class TransactionPool {
   constructor() {
-    // TODO: test load saved trnx-pool
     this.pool = {...transactionUtils.loadSavedTrnxPool()}
   }
 
   addToPool(transaction) {
     this.pool[transaction.id] = transaction
-    // TODO: test save local
     transactionUtils.saveTransactionToLocal(transaction)
   }
 
@@ -17,7 +15,6 @@ class TransactionPool {
     this.removeTransaction(transaction)
     transaction.status = 'complete'
     this.addToPool(transaction)
-    //TODO: test update local transaction
     transactionUtils.updateLocalTrnx(transaction, 'repl')
   }
 
@@ -40,11 +37,17 @@ class TransactionPool {
   }
 
   removeTransaction(transaction) {
-    // TODO: test remove local
     transactionUtils.updateLocalTrnx(transaction, 'delete')
     let newMap = Object.values(this.pool).filter(x => x.id != transaction.id)
     this.setPool({})
     newMap.forEach(trnx => this.addToPool(trnx))
+  }
+
+  multiRemoveTransaction(transactions) {
+    transactionUtils.removeLocalTrnxMany(transactions)
+    this.setPool({})
+    let np = Object.values(this.pool).filter(x => !transactions.includes(x))
+    np.forEach(x => this.addToPool(x));
   }
 
   setPool(trnxPool) {

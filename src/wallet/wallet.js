@@ -60,7 +60,7 @@ class Wallet {
       if(hasConductedTransaction) break
     }
 
-    return hasConductedTransaction ? outputsTotal : walletUtils.STARTING_BALANCE;
+    return hasConductedTransaction ? outputsTotal : walletUtils.STARTING_BALANCE + outputsTotal;
   }
 
   calculateMinerRewards({ chain, address }) {
@@ -69,7 +69,7 @@ class Wallet {
       const block = chain[index];
       for(let transaction of block.data) {
         if(transaction.input.address == '*authorized_address*') {
-          if(Object.values(transaction.outputMap).indexOf(address) == 0) {
+          if(Object.keys(transaction.outputMap).indexOf(address) == 0) {
             rewardsTotal += transaction.outputMap[address]
           }
         }

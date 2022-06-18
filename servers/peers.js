@@ -84,7 +84,7 @@ class P2PServer {
           }else {
             setTimeout(() => {
               socket.send(JSON.stringify({ type: CHANNELS.MINER, result: 'Waiting for empty new block'}));
-            }, 5000);
+            }, 7000);
           }
           break;
       }

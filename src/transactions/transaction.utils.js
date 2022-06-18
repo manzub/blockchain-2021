@@ -21,5 +21,14 @@ module.exports = {
       unlinkSync(path)
       (option && option != 'delete') && writeFileSync(path, JSON.stringify(transaction), { flag: 'w' })
     }
+  },
+  removeLocalTrnxMany(transactions) {
+    let dir = `${chainDataPath}/trnx_pool`;
+    readdirSync(dir).forEach(file => {
+      let trnxId = file.split('.dat')[0];
+      if(transactions.find(x => x.id == trnxId)) {
+        unlinkSync(`${dir}/${file}`)
+      }
+    })
   }
 }

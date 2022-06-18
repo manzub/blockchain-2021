@@ -17,10 +17,12 @@ function cryptoHash(...inputs) {
   return hash.digest('hex')
 }
 
-function addToChain({ transactionPool, blockchain, p2pInstance }) {
+function addToChain({ transactionPool, blockchain, p2pInstance }, count) {
   // priodic add to blockchain
   if(p2pInstance.nextBlock) {
-    if(Object.values(transactionPool.pool).length >= 2) {
+    const poolLength = Object.values(transactionPool.pool).length
+    console.log(poolLength);
+    if(poolLength >= 2) {
       const pendingTransactions = transactionPool.pendingTransactions();
       const completedTransactions = pendingTransactions.map(function(transaction) {
         return {...transaction, status: 'complete'}
@@ -28,17 +30,22 @@ function addToChain({ transactionPool, blockchain, p2pInstance }) {
 
       blockchain.addBlock({ block: p2pInstance.nextBlock, data: completedTransactions })
       p2pInstance.broadcastChain();
-      pendingTransactions.forEach(x => transactionPool.removeTransaction(x))
+      transactionPool.multiRemoveTransaction(pendingTransactions);
       console.log('Next block added to chain');
       p2pInstance.removeNextBlock()
     } else {
       console.log('Next block ready, awaiting new trasnactions');
     }
-  } else if(!p2pInstance.nextBlock && Object.values(transactionPool.pool).length >= 2) {
-    console.log('Pending Transactions, Awaiting Miners');
   } else {
-    console.log('Worker Ready');
-  }
+    // reduce log intervals
+    if((count % 3) == 0) {
+      if(!p2pInstance.nextBlock && Object.values(transactionPool.pool).length >= 2) {
+        console.log('Pending Transactions, Awaiting Miners');
+      } else {
+        console.log('Worker Ready');
+      }
+    }
+  } 
 }
 
 function loadSavedChain() {
